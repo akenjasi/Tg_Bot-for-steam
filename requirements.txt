@@ -3,4 +3,5 @@ uvicorn
 sqlmodel
 alembic
 requests
+pytest
 httpx
