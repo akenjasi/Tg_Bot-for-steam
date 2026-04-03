@@ -4,3 +4,4 @@ sqlmodel
 alembic
 requests
 pytest
+httpx
