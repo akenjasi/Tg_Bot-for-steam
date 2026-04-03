@@ -1,3 +1,4 @@
+# сценарии успеха
 def test_bind_success(client):
     response = client.post(
         "/bind",
@@ -15,6 +16,7 @@ def test_bind_success(client):
     }
 
 
+# сценарии дубликатов
 def test_bind_duplicate_telegram_returns_409(client):
     payload_first = {
         "telegramId": 1002,
@@ -59,6 +61,7 @@ def test_bind_duplicate_steam_returns_409(client):
     }
 
 
+# сценарии ошибок
 def test_bind_invalid_steam_link_returns_400(client):
     response = client.post(
         "/bind",

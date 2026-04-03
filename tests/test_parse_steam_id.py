@@ -8,6 +8,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from main import BusinessError, parse_steam_id
 
 
+# валидные ссылки
 @pytest.mark.parametrize(
     "url, expected_steam_id",
     [
@@ -20,6 +21,7 @@ def test_parse_steam_id_valid_links(url: str, expected_steam_id: str):
     assert parse_steam_id(url) == expected_steam_id
 
 
+# невалидные ссылки
 @pytest.mark.parametrize(
     "url, expected_message",
     [
