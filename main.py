@@ -37,6 +37,7 @@ def build_bind_response(status: str, message: str, steam_id: str | None) -> Bind
     return BindResponse(status=status, message=message, steamId=steam_id)
 
 
+# парсинг steam id из ссылки
 def parse_steam_id(url: str) -> str:
     parsed = urlparse(url)
 
@@ -60,6 +61,7 @@ def parse_steam_id(url: str) -> str:
 
 
 @app.post("/bind")
+# ручка привязки аккаунта
 def bind(data: BindRequest, session: Session = Depends(get_session)):
     try:
         steam_id = parse_steam_id(data.steamLink)
@@ -110,12 +112,14 @@ def bind(data: BindRequest, session: Session = Depends(get_session)):
 
 
 @app.get("/link/{telegramId}")
+# ручка получения привязки
 def get_link(telegramId: int, session: Session = Depends(get_session)):
     link = session.exec(select(Link).where(Link.telegram_id == telegramId)).first()
     return LinkResponse(status="success", steamId=link.steam_id64 if link else None).model_dump()
 
 
 @app.delete("/link/{telegramId}")
+# ручка удаления привязки
 def delete_link(telegramId: int, session: Session = Depends(get_session)):
     link = session.exec(select(Link).where(Link.telegram_id == telegramId)).first()
 
