@@ -36,6 +36,47 @@ cd auth_py
 uvicorn main:app --host 0.0.0.0 --port 8001 --reload
 ```
 
+## Запуск в Docker
+
+Сервис поднимается в контейнере с автоматическим применением миграций при старте.
+
+### Требования
+
+- установлен Docker
+- установлен Docker Compose
+
+### Сборка и запуск
+
+```bash
+docker compose up --build -d
+```
+
+Сервис будет доступен на порту `8082`.
+
+### Проверка
+
+```bash
+curl http://localhost:8082/link/123
+```
+
+Ожидаемый ответ для пустой базы:
+
+```json
+{"status":"success","steamId":null}
+```
+
+### Просмотр логов
+
+```bash
+docker compose logs -f
+```
+
+### Остановка
+
+```bash
+docker compose down
+```
+
 ## Полезные команды Alembic
 
 Создать новую миграцию вручную:
