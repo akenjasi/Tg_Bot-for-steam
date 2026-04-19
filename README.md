@@ -36,6 +36,70 @@ cd auth_py
 uvicorn main:app --host 0.0.0.0 --port 8001 --reload
 ```
 
+## Запуск в Docker
+
+Сервис поднимается в контейнере с автоматическим применением миграций при старте.
+
+SQLite-файл создается автоматически внутри контейнера (`/app/database.db`), поэтому отдельный bind-mount файла БД не используется.
+
+### Требования
+
+- установлен Docker
+- установлен Docker Compose
+
+### Сборка и запуск
+
+```bash
+docker compose up --build -d
+```
+
+Сервис будет доступен на порту `8082`.
+
+### Проверка
+
+```bash
+curl http://localhost:8082/link/123
+```
+
+Ожидаемый ответ для пустой базы:
+
+```json
+{"status":"success","steamId":null}
+```
+
+
+
+### Если контейнер уходит в Restarting
+
+Если в логах видно `sqlite3.OperationalError: unable to open database file`, обычно причина — bind-mount файла `./database.db:/app/database.db`, при котором на хосте создается директория вместо файла.
+
+Что сделать:
+
+```bash
+docker compose down -v
+rm -rf database.db
+docker compose up --build -d
+```
+
+Проверка:
+
+```bash
+docker compose logs --tail=100
+curl http://localhost:8082/link/123
+```
+
+### Просмотр логов
+
+```bash
+docker compose logs -f
+```
+
+### Остановка
+
+```bash
+docker compose down
+```
+
 ## Полезные команды Alembic
 
 Создать новую миграцию вручную:
