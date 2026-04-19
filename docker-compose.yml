@@ -1,13 +1,22 @@
-version: "3.9"
-
 services:
   auth-service-arseniy:
     build: .
-    container_name: auth-service-arseniy
     ports:
-      - "8082:8001"
+      - "${HOST_PORT:-8082}:${PORT:-8001}"
     environment:
-      DATABASE_URL: sqlite:////app/data/database.db
+      PORT: ${PORT:-8001}
+      DATABASE_URL: ${DATABASE_URL:-sqlite:////app/data/database.db}
     volumes:
-      - ./data:/app/data
+      - auth_service_data:/app/data
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - python -c "import os, urllib.request; urllib.request.urlopen(f'http://127.0.0.1:{os.environ.get(\"PORT\", \"8001\")}/link/123', timeout=5)"
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
     restart: unless-stopped
+
+volumes:
+  auth_service_data:
