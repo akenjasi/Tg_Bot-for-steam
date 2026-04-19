@@ -1,0 +1,11 @@
+version: "3.9"
+
+services:
+  auth-service-arseniy:
+    build: .
+    container_name: auth-service-arseniy
+    ports:
+      - "8082:8001"
+    volumes:
+      - ./database.db:/app/database.db
+    restart: unless-stopped
