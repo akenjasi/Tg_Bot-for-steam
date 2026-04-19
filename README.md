@@ -40,6 +40,8 @@ uvicorn main:app --host 0.0.0.0 --port 8001 --reload
 
 Сервис поднимается в контейнере с автоматическим применением миграций при старте.
 
+SQLite-файл создается автоматически внутри контейнера (`/app/database.db`), поэтому отдельный bind-mount файла БД не используется.
+
 ### Требования
 
 - установлен Docker
@@ -63,6 +65,27 @@ curl http://localhost:8082/link/123
 
 ```json
 {"status":"success","steamId":null}
+```
+
+
+
+### Если контейнер уходит в Restarting
+
+Если в логах видно `sqlite3.OperationalError: unable to open database file`, обычно причина — bind-mount файла `./database.db:/app/database.db`, при котором на хосте создается директория вместо файла.
+
+Что сделать:
+
+```bash
+docker compose down -v
+rm -rf database.db
+docker compose up --build -d
+```
+
+Проверка:
+
+```bash
+docker compose logs --tail=100
+curl http://localhost:8082/link/123
 ```
 
 ### Просмотр логов
