@@ -1,5 +1,7 @@
 from urllib.parse import urlparse
 
+import os
+import requests
 from fastapi import Depends, FastAPI
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
@@ -10,6 +12,8 @@ from database import get_session
 from models import Link
 
 app = FastAPI()
+
+STEAM_API_KEY = os.environ.get("STEAM_API_KEY", "")
 
 
 class BindRequest(BaseModel):
@@ -33,21 +37,62 @@ class BusinessError(Exception):
         self.message = message
 
 
+@app.get("/health")
+def health():
+    return {"status": "ok"}
+
+
 def build_bind_response(status: str, message: str, steam_id: str | None) -> BindResponse:
     return BindResponse(status=status, message=message, steamId=steam_id)
+
+
+def resolve_vanity_url(vanity_url: str) -> str | None:
+    if not STEAM_API_KEY:
+        return None
+    url = "https://api.steampowered.com/ISteamUser/ResolveVanityURL/v1/"
+    params = {"key": STEAM_API_KEY, "vanityurl": vanity_url}
+    try:
+        response = requests.get(url, params=params, timeout=10)
+        data = response.json()
+        result = data.get("response", {})
+        if result.get("success") == 1:
+            return result.get("steamid")
+    except Exception:
+        pass
+    return None
 
 
 def parse_steam_id(url: str) -> str:
     parsed = urlparse(url)
 
     if parsed.scheme not in {"http", "https"}:
+        # Возможно, передан vanity URL или SteamID64 напрямую
+        # Попробуем как vanity URL
+        if STEAM_API_KEY:
+            steam_id = resolve_vanity_url(url)
+            if steam_id:
+                return steam_id
         raise BusinessError("Неверная ссылка Steam")
 
     if parsed.netloc not in {"steamcommunity.com", "www.steamcommunity.com"}:
+        # Попробуем распознать как vanity в query-параметрах
+        if STEAM_API_KEY:
+            steam_id = resolve_vanity_url(parsed.path.strip("/"))
+            if steam_id:
+                return steam_id
         raise BusinessError("Неверная ссылка Steam")
 
     path = parsed.path.strip("/")
     parts = path.split("/")
+
+    if len(parts) == 2 and parts[0] == "id":
+        # https://steamcommunity.com/id/coolnickname
+        if STEAM_API_KEY:
+            steam_id = resolve_vanity_url(parts[1])
+            if steam_id:
+                return steam_id
+            raise BusinessError("Не удалось найти пользователя по нику")
+        raise BusinessError("Сервис не настроен для обработки vanity URL")
 
     if len(parts) != 2 or parts[0] != "profiles":
         raise BusinessError("Неверная ссылка Steam")
